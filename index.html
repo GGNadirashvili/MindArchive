@@ -12,7 +12,27 @@
     <title>MindArchive: the space of human thought</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app mounts; if the app fails to load or start, it explains why instead of a blank page. -->
+    <div id="root">
+      <p id="boot-fallback" style="color:#8f8f8f;font:13px/1.6 ui-monospace,Menlo,monospace;padding:40px 24px;max-width:640px;margin:0 auto">Opening the archive…</p>
+    </div>
+    <noscript><p style="color:#f4f4f4;font:15px system-ui;padding:24px">MindArchive needs JavaScript to run.</p></noscript>
+    <script>
+      (function () {
+        function show(msg) {
+          var el = document.getElementById('boot-fallback')
+          if (el) el.textContent = 'MindArchive could not start: ' + msg + '. Try a hard refresh (Cmd/Ctrl + Shift + R), or open it in a private window.'
+        }
+        // capture = true also catches scripts/stylesheets that fail to download (e.g. a stale cached page)
+        window.addEventListener('error', function (e) {
+          var t = e.target
+          show(t && (t.src || t.href) ? 'could not load ' + (t.src || t.href) : e.message || 'unknown error')
+        }, true)
+        window.addEventListener('unhandledrejection', function (e) {
+          show((e.reason && e.reason.message) || String(e.reason))
+        })
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
