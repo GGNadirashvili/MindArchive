@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "data:philosophers": "node scripts/fetch-philosophers.mjs",
+    "data:wikiquote": "node scripts/fetch-wikiquote.mjs && node scripts/parse-wikiquote.mjs",
+    "data:gutenberg": "node scripts/fetch-gutenberg.mjs",
+    "data:build": "node scripts/build-dataset.mjs",
+    "data": "npm run data:philosophers && npm run data:wikiquote && npm run data:gutenberg && npm run data:build"
   },
   "dependencies": {
     "react": "^19.2.8",
