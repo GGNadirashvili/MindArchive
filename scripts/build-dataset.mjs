@@ -48,6 +48,12 @@ const COUNTRY_ALIASES = {
   'Soviet Union': 'Russia',
   'Kingdom of the Netherlands': 'Netherlands',
   'Circassia': 'Russia',
+  Numidia: 'Algeria',
+  'Classical Athens': 'Greece',
+  Bithynia: 'Turkey',
+  Joseon: 'South Korea',
+  'Western Zhou': 'China',
+  Tibet: 'China',
 }
 const normCountry = (c) => (c ? COUNTRY_ALIASES[c] ?? c : null)
 
