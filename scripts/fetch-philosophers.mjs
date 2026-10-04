@@ -15,13 +15,14 @@ SELECT ?p ?pLabel ?pDescription
   (SAMPLE(?birth) AS ?birthD) (SAMPLE(?death) AS ?deathD)
   (SAMPLE(?quoteTitle) AS ?wq) (SAMPLE(?wikiTitle) AS ?wp)
   (SAMPLE(?img) AS ?image) (SAMPLE(?sep) AS ?sepId) (SAMPLE(?iep) AS ?iepId)
-  (SAMPLE(?cLabel) AS ?country) (SAMPLE(?contLabel) AS ?continent) (SAMPLE(?citLabel) AS ?citizenship)
+  (SAMPLE(?links) AS ?sitelinks) (SAMPLE(?cLabel) AS ?country) (SAMPLE(?contLabel) AS ?continent) (SAMPLE(?citLabel) AS ?citizenship)
   (GROUP_CONCAT(DISTINCT ?mvLabel; separator="|") AS ?movements)
   (GROUP_CONCAT(DISTINCT ?fieldLabel; separator="|") AS ?fields)
 WHERE {
   VALUES ?p { ${ids.map((i) => 'wd:' + i).join(' ')} }
   ?sq schema:about ?p ; schema:isPartOf <https://en.wikiquote.org/> ; schema:name ?quoteTitle .
   OPTIONAL { ?wpArt schema:about ?p ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?wikiTitle . }
+  OPTIONAL { ?p wikibase:sitelinks ?links }
   OPTIONAL { ?p wdt:P569 ?birth }
   OPTIONAL { ?p wdt:P570 ?death }
   OPTIONAL { ?p wdt:P18 ?img }
@@ -59,6 +60,7 @@ for (const [i, group] of chunk(ids, 80).entries()) {
       description: val(r, 'pDescription') ?? '',
       born: year(val(r, 'birthD')),
       died: year(val(r, 'deathD')),
+      sitelinks: Number(val(r, 'sitelinks') ?? 0),
       wikiquote: val(r, 'wq'),
       wikipedia: val(r, 'wp') ?? null,
       image: val(r, 'image') ?? null,
