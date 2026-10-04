@@ -25,3 +25,4 @@ dist-ssr
 
 # Data pipeline caches (regenerable via npm run data)
 data/raw/
+.claude/
