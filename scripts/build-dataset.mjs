@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { CATEGORIES, classify } from './categories.mjs'
+import { loadCurated } from './curated.mjs'
 import { readJson, writeJson } from './lib.mjs'
 import { OTHER_ROLE, ROLES, classifyRoles } from './roles.mjs'
 import { SCHOOLS, classifySchools } from './schools.mjs'
@@ -61,13 +62,18 @@ const eraOf = (born) => {
 
 const slugify = (s) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-const philosophers = await readJson('data/raw/philosophers.json')
+const curated = await loadCurated()
+const philosophers = [...(await readJson('data/raw/philosophers.json'))]
+for (const { thinker } of curated) if (!philosophers.some((p) => p.id === thinker.id)) philosophers.push(thinker)
 const wikiCategories = await readJson('data/raw/wikipedia-categories.json')
 const sources = [{ file: 'data/raw/quotes-wikiquote.json', label: 'wikiquote' }]
 if (existsSync('data/raw/quotes-gutenberg.json')) sources.push({ file: 'data/raw/quotes-gutenberg.json', label: 'gutenberg' })
 
 const byPhilosopher = new Map()
 const seen = new Set()
+for (const { thinker, quotes } of curated) {
+  byPhilosopher.set(thinker.id, quotes.map((q) => ({ ...q, pid: thinker.id, via: 'curated' })))
+}
 for (const src of sources) {
   for (const q of await readJson(src.file)) {
     const key = q.pid + '|' + q.text.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120)
@@ -103,6 +109,7 @@ const outPhilosophers = kept.map((p, i) => {
     img: p.image ? p.image.replace(/^http:/, 'https:') + '?width=240' : null,
     wiki: p.wikipedia,
     wq: p.wikiquote,
+    ...(p.wikiquoteLang ? { wql: p.wikiquoteLang } : {}),
     sep: p.sep,
     iep: p.iep,
     n: byPhilosopher.get(p.id).length,
@@ -113,6 +120,7 @@ const outPhilosophers = kept.map((p, i) => {
 const FLAG_PUBLIC_DOMAIN = 1
 const FLAG_ATTRIBUTED = 2
 const FLAG_FEATURED = 4
+const FLAG_TRANSLATED = 8
 
 // Within each thinker: featured (best-known) lines first, then sourced quotes, then public-domain
 // passages, then attributed ones.
@@ -124,8 +132,8 @@ for (const p of kept) {
   const quotes = byPhilosopher.get(p.id).map((q, i) => ({ q, i })).sort((a, b) => rank(a.q) - rank(b.q) || a.i - b.i)
   for (const { q } of quotes) {
     const cats = classify(q.text)
-    const flags = (q.via === 'gutenberg' ? FLAG_PUBLIC_DOMAIN : 0) | (q.attributed ? FLAG_ATTRIBUTED : 0) | (q.featured ? FLAG_FEATURED : 0)
-    rows.push([indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], flags])
+    const flags = (q.via === 'gutenberg' ? FLAG_PUBLIC_DOMAIN : 0) | (q.attributed ? FLAG_ATTRIBUTED : 0) | (q.featured ? FLAG_FEATURED : 0) | (q.translated ? FLAG_TRANSLATED : 0)
+    rows.push([indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], flags, ...(q.orig ? [q.orig] : [])])
   }
 }
 

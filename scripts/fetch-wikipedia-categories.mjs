@@ -1,9 +1,11 @@
 // Downloads the (non-hidden) English Wikipedia categories of each thinker's article.
 // Categories like "Stoic philosophers" or "Existentialists" feed the school-of-thought filter.
+import { loadCurated } from './curated.mjs'
 import { chunk, fetchJson, readJson, sleep, writeJson } from './lib.mjs'
 
 const philosophers = await readJson('data/raw/philosophers.json')
-const titles = [...new Set(philosophers.map((p) => p.wikipedia).filter(Boolean))]
+const curated = await loadCurated()
+const titles = [...new Set([...philosophers, ...curated.map((c) => c.thinker)].map((p) => p.wikipedia).filter(Boolean))]
 const result = {}
 
 for (const [i, group] of chunk(titles, 40).entries()) {
