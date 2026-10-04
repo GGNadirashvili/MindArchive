@@ -86,6 +86,18 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
     [meta, facets.cats, filters, onChange],
   )
 
+  const roleItems = useMemo<Item[]>(
+    () =>
+      meta.roles.map((r, i) => ({
+        key: r.id,
+        label: r.name,
+        count: facets.roles[i],
+        checked: filters.roles.has(i),
+        onToggle: () => onChange({ ...filters, roles: toggle(filters.roles, i) }),
+      })),
+    [meta, facets.roles, filters, onChange],
+  )
+
   const countryItems = useMemo<Item[]>(
     () =>
       [...new Set(meta.philosophers.map((p) => p.country))]
@@ -145,15 +157,19 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
         <span className="check-count">{savedCount}</span>
       </label>
 
+      <Accordion title="Role" selected={filters.roles.size}>
+        <CheckList items={roleItems} />
+      </Accordion>
+
       <Accordion title="Category" selected={filters.cats.size}>
         <CheckList items={categoryItems} />
       </Accordion>
 
-      <Accordion title="Philosopher’s country" selected={filters.countries.size}>
+      <Accordion title="Thinker’s country" selected={filters.countries.size}>
         <CheckList items={countryItems} searchable placeholder="Find a country…" />
       </Accordion>
 
-      <Accordion title="Philosopher" selected={filters.philosophers.size}>
+      <Accordion title="Thinker" selected={filters.philosophers.size}>
         <CheckList items={philosopherItems} searchable placeholder={`Search ${meta.philosophers.length.toLocaleString()} thinkers…`} />
       </Accordion>
 

@@ -11,6 +11,8 @@ export interface Philosopher {
   born: number | null
   died: number | null
   era: string
+  /** indexes into Meta.roles; the first is the primary role */
+  roles: number[]
   country: string
   continent: string
   schools: string[]
@@ -28,6 +30,7 @@ export interface Meta {
   shardSize: number
   quoteCount: number
   categories: Category[]
+  roles: Category[]
   philosophers: Philosopher[]
 }
 
@@ -42,13 +45,14 @@ export interface Quote {
   hay: string
 }
 
-export type SortKey = 'renown' | 'philosopher' | 'country' | 'category' | 'era' | 'shortest' | 'longest' | 'shuffle'
+export type SortKey = 'renown' | 'philosopher' | 'country' | 'category' | 'role' | 'era' | 'shortest' | 'longest' | 'shuffle'
 
 export interface Filters {
   query: string
   cats: Set<number>
   countries: Set<string>
   eras: Set<string>
+  roles: Set<number>
   philosophers: Set<number>
   saved: boolean
 }

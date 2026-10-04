@@ -6,7 +6,8 @@ export const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'renown', label: 'Most renowned' },
   { key: 'country', label: 'Country' },
   { key: 'category', label: 'Category' },
-  { key: 'philosopher', label: 'Philosopher A–Z' },
+  { key: 'role', label: 'Role' },
+  { key: 'philosopher', label: 'Thinker A–Z' },
   { key: 'era', label: 'Era (oldest first)' },
   { key: 'shortest', label: 'Shortest first' },
   { key: 'longest', label: 'Longest first' },
@@ -18,11 +19,12 @@ export const emptyFilters = (): Filters => ({
   cats: new Set(),
   countries: new Set(),
   eras: new Set(),
+  roles: new Set(),
   philosophers: new Set(),
   saved: false,
 })
 
-type Facet = 'cats' | 'countries' | 'eras' | 'philosophers' | 'saved' | 'query'
+type Facet = 'cats' | 'countries' | 'eras' | 'roles' | 'philosophers' | 'saved' | 'query'
 
 /** Does a quote pass every active filter, optionally ignoring one facet (for faceted counts)? */
 export function matches(q: Quote, f: Filters, meta: Meta, saved: Set<number>, skip?: Facet): boolean {
@@ -33,6 +35,7 @@ export function matches(q: Quote, f: Filters, meta: Meta, saved: Set<number>, sk
   if (skip !== 'cats' && f.cats.size && !q.cats.some((c) => f.cats.has(c))) return false
   if (skip !== 'countries' && f.countries.size && !f.countries.has(ph.country)) return false
   if (skip !== 'eras' && f.eras.size && !f.eras.has(ph.era)) return false
+  if (skip !== 'roles' && f.roles.size && !ph.roles.some((r) => f.roles.has(r))) return false
   if (skip !== 'philosophers' && f.philosophers.size && !f.philosophers.has(q.p)) return false
   if (skip !== 'saved' && f.saved && !saved.has(q.id)) return false
   return true
@@ -42,6 +45,7 @@ export interface Facets {
   cats: number[]
   countries: Map<string, number>
   eras: Map<string, number>
+  roles: number[]
   philosophers: Map<number, number>
 }
 
@@ -50,6 +54,7 @@ export function computeFacets(quotes: Quote[], f: Filters, meta: Meta, saved: Se
   const cats = new Array(meta.categories.length).fill(0)
   const countries = new Map<string, number>()
   const eras = new Map<string, number>()
+  const roles = new Array(meta.roles.length).fill(0)
   const philosophers = new Map<number, number>()
   const bump = <K>(m: Map<K, number>, k: K) => m.set(k, (m.get(k) ?? 0) + 1)
 
@@ -58,9 +63,10 @@ export function computeFacets(quotes: Quote[], f: Filters, meta: Meta, saved: Se
     if (matches(q, f, meta, saved, 'cats')) for (const c of q.cats) cats[c]++
     if (matches(q, f, meta, saved, 'countries')) bump(countries, ph.country)
     if (matches(q, f, meta, saved, 'eras')) bump(eras, ph.era)
+    if (matches(q, f, meta, saved, 'roles')) for (const r of ph.roles) roles[r]++
     if (matches(q, f, meta, saved, 'philosophers')) bump(philosophers, q.p)
   }
-  return { cats, countries, eras, philosophers }
+  return { cats, countries, eras, roles, philosophers }
 }
 
 export interface Row {
@@ -116,6 +122,18 @@ export function sortQuotes(list: Quote[], key: SortKey, f: Filters, meta: Meta, 
         [...list].sort((a, b) => categoryOf(a).localeCompare(categoryOf(b)) || a.p - b.p || byNumber(a, b)),
         categoryOf,
       )
+    case 'role': {
+      // Primary role (or the first selected role the thinker has) decides the group.
+      const roleOf = (q: Quote) => {
+        const roles = P[q.p].roles
+        const chosen = f.roles.size ? roles.find((r) => f.roles.has(r)) : undefined
+        return meta.roles[chosen ?? roles[0]].name
+      }
+      return withGroup(
+        [...list].sort((a, b) => roleOf(a).localeCompare(roleOf(b)) || a.p - b.p || byNumber(a, b)),
+        roleOf,
+      )
+    }
     case 'era':
       return withGroup(
         [...list].sort(

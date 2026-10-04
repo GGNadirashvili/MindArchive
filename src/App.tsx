@@ -66,7 +66,7 @@ export default function App() {
   const rows = useMemo(() => (meta ? sortQuotes(filtered, sort, deferredFilters, meta, seed) : []), [filtered, sort, deferredFilters, meta, seed])
   const facets = useMemo(() => (meta ? computeFacets(quotes, deferredFilters, meta, saved) : null), [quotes, deferredFilters, meta, saved])
 
-  const hasFilters = filters.query !== '' || filters.cats.size > 0 || filters.countries.size > 0 || filters.eras.size > 0 || filters.philosophers.size > 0 || filters.saved
+  const hasFilters = filters.query !== '' || filters.cats.size > 0 || filters.countries.size > 0 || filters.eras.size > 0 || filters.roles.size > 0 || filters.philosophers.size > 0 || filters.saved
 
   const toggleSave = useCallback((id: number) => {
     setSaved((prev) => {
@@ -92,7 +92,7 @@ export default function App() {
   }, [])
 
   const loading = meta !== null && quotes.length < meta.quoteCount
-  const grouped = sort === 'country' || sort === 'category' || sort === 'philosopher' || sort === 'era'
+  const grouped = sort === 'country' || sort === 'category' || sort === 'role' || sort === 'philosopher' || sort === 'era'
 
   if (error) {
     return (
@@ -124,8 +124,8 @@ export default function App() {
             The space of <em>human thought.</em>
           </h1>
           <p className="hero-sub">
-            {meta.quoteCount.toLocaleString()} quotes and passages from {meta.philosophers.length.toLocaleString()} philosophers across{' '}
-            {new Set(meta.philosophers.map((p) => p.country)).size} countries. Search, filter by topic, and sort by where thinkers came from.
+            {meta.quoteCount.toLocaleString()} quotes and passages from {meta.philosophers.length.toLocaleString()} thinkers across{' '}
+            {new Set(meta.philosophers.map((p) => p.country)).size} countries. Filter by topic or role, and sort by where thinkers came from.
           </p>
           <div className="searchbar">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
@@ -185,7 +185,7 @@ export default function App() {
 
           <ActiveChips meta={meta} filters={filters} onChange={setFilters} />
 
-          {grouped && <p className="group-hint">Grouped by {sort === 'philosopher' ? 'philosopher' : sort}.</p>}
+          {grouped && <p className="group-hint">Grouped by {sort === 'philosopher' ? 'thinker' : sort}.</p>}
 
           <QuoteList
             rows={rows}
@@ -201,13 +201,13 @@ export default function App() {
 
       <footer className="footer wrap">
         <p>
-          Quotes from <a href="https://www.wikiquote.org" target="_blank" rel="noreferrer noopener">Wikiquote</a> (CC BY-SA 4.0), philosopher data from <a href="https://www.wikidata.org" target="_blank" rel="noreferrer noopener">Wikidata</a> (CC0), and public-domain
+          Quotes from <a href="https://www.wikiquote.org" target="_blank" rel="noreferrer noopener">Wikiquote</a> (CC BY-SA 4.0), thinker data from <a href="https://www.wikidata.org" target="_blank" rel="noreferrer noopener">Wikidata</a> (CC0), and public-domain
           passages from <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer noopener">Project Gutenberg</a>. Topics are assigned automatically and may be imperfect. Data updated {meta.generated}.
         </p>
       </footer>
 
       {openPhilosopher !== null && (
-        <PhilosopherModal philosopher={meta.philosophers[openPhilosopher]} onClose={() => setOpenPhilosopher(null)} onShowQuotes={showPhilosopherQuotes} onCountry={onCountry} />
+        <PhilosopherModal roles={meta.philosophers[openPhilosopher].roles.map((r) => meta.roles[r].name)} philosopher={meta.philosophers[openPhilosopher]} onClose={() => setOpenPhilosopher(null)} onShowQuotes={showPhilosopherQuotes} onCountry={onCountry} />
       )}
     </>
   )
@@ -216,6 +216,7 @@ export default function App() {
 function ActiveChips({ meta, filters, onChange }: { meta: Meta; filters: Filters; onChange: (f: Filters) => void }) {
   const chips: { key: string; label: string; remove: () => void }[] = []
   for (const c of filters.cats) chips.push({ key: `c${c}`, label: meta.categories[c].name, remove: () => onChange({ ...filters, cats: new Set([...filters.cats].filter((x) => x !== c)) }) })
+  for (const r of filters.roles) chips.push({ key: `r${r}`, label: meta.roles[r].name, remove: () => onChange({ ...filters, roles: new Set([...filters.roles].filter((x) => x !== r)) }) })
   for (const c of filters.countries) chips.push({ key: `k${c}`, label: c, remove: () => onChange({ ...filters, countries: new Set([...filters.countries].filter((x) => x !== c)) }) })
   for (const e of filters.eras) chips.push({ key: `e${e}`, label: e, remove: () => onChange({ ...filters, eras: new Set([...filters.eras].filter((x) => x !== e)) }) })
   for (const p of filters.philosophers) chips.push({ key: `p${p}`, label: meta.philosophers[p].name, remove: () => onChange({ ...filters, philosophers: new Set([...filters.philosophers].filter((x) => x !== p)) }) })

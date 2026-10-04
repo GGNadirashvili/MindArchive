@@ -35,7 +35,7 @@ export const QuoteCard = memo(function QuoteCard({ quote, meta, saved, onToggleS
             {ph.name}
           </button>
           <span className="author-meta">
-            <button className="link-btn" onClick={() => onCountry(ph.country)}>
+            {meta.roles[ph.roles[0]].name} · <button className="link-btn" onClick={() => onCountry(ph.country)}>
               {ph.country}
             </button>
             {lifespan(ph.born, ph.died) && <> · {lifespan(ph.born, ph.died)}</>}

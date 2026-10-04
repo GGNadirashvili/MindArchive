@@ -1,8 +1,8 @@
 # MindArchive
 
-A searchable space of philosophers' quotes and thoughts, drawn from every era and tradition.
-Black background, white text, green accents. Filter by topic, era, country or philosopher, and
-sort by category or by the philosopher's country.
+A searchable space of quotes and thoughts from thinkers (philosophers, scientists, writers, statesmen, spiritual leaders and more) of every era and tradition.
+Black background, white text, green accents. Filter by topic, role, era, country or thinker, and
+sort by category, role or the thinker's country.
 
 Built with React + TypeScript + Vite and deployed as a static site on GitHub Pages.
 
