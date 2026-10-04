@@ -4,7 +4,9 @@ import type { Filters, Meta, SortKey } from './types'
 const SORTS: SortKey[] = ['renown', 'philosopher', 'country', 'category', 'role', 'era', 'shortest', 'longest', 'shuffle']
 
 /** Filters + sort live in the URL hash so any view can be shared or bookmarked. */
-export function readHash(meta: Meta): { filters: Filters; sort: SortKey } {
+export type AppView = 'archive' | 'map'
+
+export function readHash(meta: Meta): { filters: Filters; sort: SortKey; view: AppView } {
   const params = new URLSearchParams(window.location.hash.slice(1))
   const filters = emptyFilters()
   filters.query = params.get('q') ?? ''
@@ -19,11 +21,12 @@ export function readHash(meta: Meta): { filters: Filters; sort: SortKey } {
   const slugs = (params.get('by') ?? '').split(',').filter(Boolean)
   for (const p of meta.philosophers) if (slugs.includes(p.slug)) filters.philosophers.add(p.i)
   const sort = params.get('sort') as SortKey | null
-  return { filters, sort: sort && SORTS.includes(sort) ? sort : 'renown' }
+  return { filters, sort: sort && SORTS.includes(sort) ? sort : 'renown', view: params.get('view') === 'map' ? 'map' : 'archive' }
 }
 
-export function writeHash(meta: Meta, filters: Filters, sort: SortKey) {
+export function writeHash(meta: Meta, filters: Filters, sort: SortKey, view: AppView) {
   const params = new URLSearchParams()
+  if (view === 'map') params.set('view', 'map')
   if (filters.query) params.set('q', filters.query)
   if (filters.cats.size) params.set('cat', [...filters.cats].map((i) => meta.categories[i].id).join(','))
   if (filters.roles.size) params.set('role', [...filters.roles].map((i) => meta.roles[i].id).join(','))

@@ -1,11 +1,14 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { SORT_OPTIONS, computeFacets, emptyFilters, matches, sortQuotes } from './archive'
 import { PhilosopherModal } from './components/PhilosopherModal'
 import { QuoteList } from './components/QuoteList'
 import { Sidebar } from './components/Sidebar'
 import { loadMeta, loadShards } from './data'
 import type { Filters, Meta, Quote, SortKey } from './types'
-import { readHash, writeHash } from './urlState'
+import { readHash, writeHash, type AppView } from './urlState'
+
+// The map (and its ~250 KB of geography data) is only downloaded when someone opens it.
+const WorldMap = lazy(() => import('./components/WorldMap'))
 
 const SAVED_KEY = 'mindarchive:saved'
 
@@ -27,6 +30,7 @@ export default function App() {
   const [saved, setSaved] = useState<Set<number>>(loadSaved)
   const [openPhilosopher, setOpenPhilosopher] = useState<number | null>(null)
   const [drawer, setDrawer] = useState(false)
+  const [appView, setAppView] = useState<AppView>('archive')
 
   useEffect(() => {
     let cancelled = false
@@ -38,6 +42,7 @@ export default function App() {
         setMeta(m)
         setFilters(fromUrl.filters)
         setSort(fromUrl.sort)
+        setAppView(fromUrl.view)
         await loadShards(m, (shard) => !cancelled && setQuotes((prev) => [...prev, ...shard]))
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load the archive')
@@ -49,8 +54,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (meta) writeHash(meta, filters, sort)
-  }, [meta, filters, sort])
+    if (meta) writeHash(meta, filters, sort, appView)
+  }, [meta, filters, sort, appView])
 
   useEffect(() => {
     try {
@@ -91,6 +96,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
+  const showThinkerFromMap = useCallback((i: number) => {
+    showPhilosopherQuotes(i)
+    setAppView('archive')
+  }, [showPhilosopherQuotes])
+
+  const showCountryFromMap = useCallback((country: string) => {
+    setFilters({ ...emptyFilters(), countries: new Set([country]) })
+    setAppView('archive')
+    window.scrollTo({ top: 0 })
+  }, [])
+
   const loading = meta !== null && quotes.length < meta.quoteCount
   const grouped = sort === 'country' || sort === 'category' || sort === 'role' || sort === 'philosopher' || sort === 'era'
 
@@ -116,10 +132,29 @@ export default function App() {
     <>
       <header className="hero">
         <div className="wrap">
-          <div className="brand">
-            <span className="brand-mark" aria-hidden />
-            <span className="brand-name">MindArchive</span>
+          <div className="topbar">
+            <div className="brand">
+              <span className="brand-mark" aria-hidden />
+              <span className="brand-name">MindArchive</span>
+            </div>
+            <nav className="view-nav" aria-label="Views">
+              <button className={appView === 'archive' ? 'on' : ''} onClick={() => setAppView('archive')} aria-pressed={appView === 'archive'}>
+                Archive
+              </button>
+              <button className={appView === 'map' ? 'on' : ''} onClick={() => setAppView('map')} aria-pressed={appView === 'map'}>
+                World map
+              </button>
+            </nav>
           </div>
+          {appView === 'map' ? (
+            <>
+              <h1 className="hero-title hero-title-map">
+                Where thinkers <em>come from.</em>
+              </h1>
+              <p className="hero-sub">Brighter countries have more thinkers. Click a country to meet them and read their words. Scroll the page normally; use + and − or ⌘/Ctrl + scroll to zoom.</p>
+            </>
+          ) : (
+            <>
           <h1 className="hero-title">
             The space of <em>human thought.</em>
           </h1>
@@ -140,9 +175,18 @@ export default function App() {
               aria-label="Search quotes"
             />
           </div>
+            </>
+          )}
         </div>
       </header>
 
+      {appView === 'map' ? (
+        <main className="wrap map-main">
+          <Suspense fallback={<p className="map-loading">Drawing the world…</p>}>
+            <WorldMap meta={meta} quotes={quotes} onShowThinker={showThinkerFromMap} onShowCountry={showCountryFromMap} />
+          </Suspense>
+        </main>
+      ) : (
       <main className="wrap layout">
         <div className={`sidebar-wrap ${drawer ? 'open' : ''}`}>
           <button className="drawer-close" onClick={() => setDrawer(false)}>Done · show {filtered.length.toLocaleString()} quotes</button>
@@ -198,6 +242,7 @@ export default function App() {
           />
         </section>
       </main>
+      )}
 
       <footer className="footer wrap">
         <p>
