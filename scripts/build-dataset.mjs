@@ -4,6 +4,7 @@ import { rm } from 'node:fs/promises'
 import { CATEGORIES, classify } from './categories.mjs'
 import { readJson, writeJson } from './lib.mjs'
 import { OTHER_ROLE, ROLES, classifyRoles } from './roles.mjs'
+import { SCHOOLS, classifySchools } from './schools.mjs'
 
 const OUT = 'public/data'
 const SHARD_SIZE = 4000
@@ -61,6 +62,7 @@ const eraOf = (born) => {
 const slugify = (s) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 const philosophers = await readJson('data/raw/philosophers.json')
+const wikiCategories = await readJson('data/raw/wikipedia-categories.json')
 const sources = [{ file: 'data/raw/quotes-wikiquote.json', label: 'wikiquote' }]
 if (existsSync('data/raw/quotes-gutenberg.json')) sources.push({ file: 'data/raw/quotes-gutenberg.json', label: 'gutenberg' })
 
@@ -97,7 +99,7 @@ const outPhilosophers = kept.map((p, i) => {
     roles: classifyRoles(p.description),
     country,
     continent: p.continent ?? 'Unknown',
-    schools: p.movements.slice(0, 3),
+    schools: classifySchools({ categories: wikiCategories[p.wikipedia] ?? [], movements: p.movements, description: p.description }),
     img: p.image ? p.image.replace(/^http:/, 'https:') + '?width=240' : null,
     wiki: p.wikipedia,
     wq: p.wikiquote,
@@ -127,6 +129,7 @@ await writeJson(`${OUT}/meta.json`, {
   shards: shards.length,
   shardSize: SHARD_SIZE,
   quoteCount: rows.length,
+  schools: SCHOOLS.map((s) => ({ id: s.id, name: s.name })),
   roles: [...ROLES.map((r) => ({ id: r.id, name: r.name })), OTHER_ROLE],
   categories: [...CATEGORIES.map((c) => ({ id: c.id, name: c.name })), { id: 'reflections', name: 'Reflections' }],
   philosophers: outPhilosophers,
