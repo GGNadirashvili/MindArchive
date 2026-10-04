@@ -131,7 +131,7 @@ function parsePage(wikitext, { startInQuotes = false, defaultSource = null } = {
   // Image captions on Wikiquote are the page's featured quotes: usually the best-known lines,
   // often a shorter form of a longer quote below ("The unexamined life is not worth living.").
   const byKey = new Map(quotes.map((q) => [normalize(q.text), q]))
-  for (const m of wikitext.matchAll(/\[\[(?:File|Image):((?:[^\[\]]|\[\[[^\]]*\]\])*)\]\]/g)) {
+  for (const m of wikitext.matchAll(/\[\[(?:File|Image):((?:[^[\]]|\[\[[^\]]*\]\])*)\]\]/g)) {
     const caption = tidy(clean(m[1].replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g, '$1').split('|').pop()))
     if (!isQuotable(caption)) continue
     const key = normalize(caption)
