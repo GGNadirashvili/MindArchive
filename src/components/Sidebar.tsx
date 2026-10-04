@@ -116,13 +116,15 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
 
   const languageItems = useMemo<Item[]>(
     () =>
-      meta.languages.map((code) => ({
-        key: code,
-        label: languageLabel(code),
-        count: facets.languages.get(code) ?? 0,
-        checked: filters.languages.has(code),
-        onToggle: () => onChange({ ...filters, languages: toggle(filters.languages, code) }),
-      })),
+      meta.languages
+        .map((code) => ({
+          key: code,
+          label: languageLabel(code),
+          count: facets.languages.get(code) ?? 0,
+          checked: filters.languages.has(code),
+          onToggle: () => onChange({ ...filters, languages: toggle(filters.languages, code) }),
+        }))
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
     [meta, facets.languages, filters, onChange],
   )
 
