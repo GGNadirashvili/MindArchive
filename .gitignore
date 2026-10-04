@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Data pipeline caches (regenerable via npm run data)
+data/raw/
