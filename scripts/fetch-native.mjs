@@ -3,7 +3,6 @@
 // Also adds Georgian thinkers that have a Georgian Wikiquote page but no English one.
 //
 //   node scripts/fetch-native.mjs [ka ru ...]      (default: ka ru)
-import { existsSync } from 'node:fs'
 import { loadCurated } from './curated.mjs'
 import { chunk, fetchJson, fetchWikitext, readJson, sleep, sparql, val, writeJson } from './lib.mjs'
 import { ROLES, classifyRoles } from './roles.mjs'

@@ -71,6 +71,10 @@ const slugify = (s) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const curated = await loadCurated()
 const philosophers = [...(await readJson('data/raw/philosophers.json'))]
 for (const { thinker } of curated) if (!philosophers.some((p) => p.id === thinker.id)) philosophers.push(thinker)
+// Thinkers found through native-language Wikiquote editions (e.g. Georgian authors).
+const nativeThinkers = existsSync('data/raw/native-thinkers.json') ? await readJson('data/raw/native-thinkers.json') : []
+for (const t of nativeThinkers) if (!philosophers.some((p) => p.id === t.id)) philosophers.push(t)
+const nativeQuotes = existsSync('data/raw/quotes-native.json') ? await readJson('data/raw/quotes-native.json') : []
 const wikiCategories = await readJson('data/raw/wikipedia-categories.json')
 const sources = [{ file: 'data/raw/quotes-wikiquote.json', label: 'wikiquote' }]
 if (existsSync('data/raw/quotes-gutenberg.json')) sources.push({ file: 'data/raw/quotes-gutenberg.json', label: 'gutenberg' })
@@ -88,6 +92,12 @@ for (const src of sources) {
     if (!byPhilosopher.has(q.pid)) byPhilosopher.set(q.pid, [])
     byPhilosopher.get(q.pid).push({ ...q, via: src.label })
   }
+}
+
+// Native-language quotes are already de-duplicated per language; they keep their language code.
+for (const q of nativeQuotes) {
+  if (!byPhilosopher.has(q.pid)) byPhilosopher.set(q.pid, [])
+  byPhilosopher.get(q.pid).push({ ...q, via: 'native' })
 }
 
 const kept = philosophers
@@ -137,9 +147,13 @@ const rows = []
 for (const p of kept) {
   const quotes = byPhilosopher.get(p.id).map((q, i) => ({ q, i })).sort((a, b) => rank(a.q) - rank(b.q) || a.i - b.i)
   for (const { q } of quotes) {
-    const cats = classify(q.text)
+    // Topic keywords are English, so native-language quotes fall into "Reflections".
+    const cats = q.lang ? [] : classify(q.text)
     const flags = (q.via === 'gutenberg' ? FLAG_PUBLIC_DOMAIN : 0) | (q.attributed ? FLAG_ATTRIBUTED : 0) | (q.featured ? FLAG_FEATURED : 0) | (q.translated ? FLAG_TRANSLATED : 0)
-    rows.push([indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], flags, ...(q.orig ? [q.orig] : [])])
+    const row = [indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], flags]
+    if (q.lang) row.push(q.orig ?? '', q.lang)
+    else if (q.orig) row.push(q.orig)
+    rows.push(row)
   }
 }
 
@@ -155,6 +169,7 @@ await writeJson(`${OUT}/meta.json`, {
   shardSize: SHARD_SIZE,
   quoteCount: rows.length,
   schools: SCHOOLS.map((s) => ({ id: s.id, name: s.name })),
+  languages: [...new Set(['en', ...nativeQuotes.map((q) => q.lang)])],
   roles: [...ROLES.map((r) => ({ id: r.id, name: r.name })), OTHER_ROLE],
   categories: [...CATEGORIES.map((c) => ({ id: c.id, name: c.name })), { id: 'reflections', name: 'Reflections' }],
   philosophers: outPhilosophers,
