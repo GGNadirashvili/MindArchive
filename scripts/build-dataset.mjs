@@ -8,12 +8,45 @@ const OUT = 'public/data'
 const SHARD_SIZE = 4000
 const FALLBACK = CATEGORIES.length // "Reflections" – quotes no keyword matched
 
+// Historical / political entities -> the modern country they correspond to.
 const COUNTRY_ALIASES = {
   'United States of America': 'United States',
   'United Kingdom of Great Britain and Ireland': 'United Kingdom',
+  'Kingdom of England': 'United Kingdom',
+  'British Empire': 'United Kingdom',
+  'British Raj': 'India',
+  'Gupta Empire': 'India',
+  'Chola dynasty': 'India',
+  'Shakya': 'Nepal',
   "People's Republic of China": 'China',
+  'Zhou dynasty': 'China',
+  'Ming dynasty': 'China',
+  'Tang dynasty': 'China',
+  'Eastern Han': 'China',
+  'Qi': 'China',
+  'Chu': 'China',
+  'Lu': 'China',
+  'Zhao': 'China',
+  'Nguyen dynasty': 'Vietnam',
+  'Empire of Japan': 'Japan',
   'Kingdom of Italy': 'Italy',
+  'Ancient Rome': 'Italy',
+  'Roman Empire': 'Italy',
+  'Ancient Greece': 'Greece',
+  'Ancient Egypt': 'Egypt',
+  'Kingdom of Pergamon': 'Turkey',
+  'Kingdom of Pontus': 'Turkey',
+  'Byzantine Empire': 'Turkey',
+  'Akkadian Empire': 'Iraq',
+  'Kingdom of France': 'France',
+  'Carolingian Empire': 'France',
+  'Kingdom of Bohemia': 'Czech Republic',
+  'Russian Empire': 'Russia',
+  'Soviet Union': 'Russia',
+  'Kingdom of the Netherlands': 'Netherlands',
+  'Circassia': 'Russia',
 }
+const normCountry = (c) => (c ? COUNTRY_ALIASES[c] ?? c : null)
 
 const eraOf = (born) => {
   if (born == null) return 'Unknown'
@@ -51,11 +84,11 @@ const outPhilosophers = kept.map((p, i) => {
   let slug = slugify(p.name) || p.id.toLowerCase()
   if (usedSlugs.has(slug)) slug += '-' + p.id.toLowerCase()
   usedSlugs.add(slug)
-  const country = COUNTRY_ALIASES[p.country] ?? p.country ?? COUNTRY_ALIASES[p.citizenship] ?? p.citizenship ?? 'Unknown'
+  const country = normCountry(p.country) ?? normCountry(p.citizenship) ?? 'Unknown'
   return {
     i,
     slug,
-    name: p.name,
+    name: /^Q\d+$/.test(p.name) ? p.wikiquote : p.name,
     desc: p.description,
     born: p.born,
     died: p.died,
