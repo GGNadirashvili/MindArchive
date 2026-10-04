@@ -141,7 +141,7 @@ const REF = /<ref[^>/]*>([\s\S]*?)<\/ref>/gi
 const OPEN_CLOSE = /^\s*(?:«\s*([\s\S]+?)\s*»|„([\s\S]+?)[“”"]|"([\s\S]+?)"|“([\s\S]+?)”|‘([\s\S]+?)’)\s*(?:[–—-]+\s*([\s\S]*))?$/
 
 /** One bullet item -> { text, source } for the western-European editions. */
-function bulletToQuote(raw, subs, lang) {
+function bulletToQuote(raw, subs) {
   // {{Versalita|Palomo}} is the author's name in small caps: keep it, drop other templates
   const refs = [...raw.matchAll(REF)].map((m) => clean(m[1].replace(/\{\{(?:Versalita|Small ?caps|Smallcaps)\|([^{}|]*)\}\}/gi, '$1')))
   let body = raw.replace(REF, '').replace(/<ref[^>]*\/>/gi, '')
@@ -177,7 +177,7 @@ function parseBullets(wikitext, lang) {
   let item = null
   const flush = () => {
     if (!item) return
-    const { text, source } = bulletToQuote(item.raw, item.subs, lang)
+    const { text, source } = bulletToQuote(item.raw, item.subs)
     item = null
     if (skip || text.length < 20 || text.length > 1500 || /\bhttps?:|[{}|]/.test(text) || !isLanguage(text, lang)) return
     quotes.push({ text, source: source || null, attributed })
