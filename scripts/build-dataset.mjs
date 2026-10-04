@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { CATEGORIES, classify } from './categories.mjs'
 import { readJson, writeJson } from './lib.mjs'
+import { OTHER_ROLE, ROLES, classifyRoles } from './roles.mjs'
 
 const OUT = 'public/data'
 const SHARD_SIZE = 4000
@@ -93,6 +94,7 @@ const outPhilosophers = kept.map((p, i) => {
     born: p.born,
     died: p.died,
     era: eraOf(p.born),
+    roles: classifyRoles(p.description),
     country,
     continent: p.continent ?? 'Unknown',
     schools: p.movements.slice(0, 3),
@@ -125,6 +127,7 @@ await writeJson(`${OUT}/meta.json`, {
   shards: shards.length,
   shardSize: SHARD_SIZE,
   quoteCount: rows.length,
+  roles: [...ROLES.map((r) => ({ id: r.id, name: r.name })), OTHER_ROLE],
   categories: [...CATEGORIES.map((c) => ({ id: c.id, name: c.name })), { id: 'reflections', name: 'Reflections' }],
   philosophers: outPhilosophers,
 })
