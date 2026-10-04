@@ -1,10 +1,11 @@
 import { Suspense, lazy, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { SORT_OPTIONS, computeFacets, emptyFilters, matches, sortQuotes } from './archive'
+import { LanguageSwitch } from './components/LanguageSwitch'
 import { PhilosopherModal } from './components/PhilosopherModal'
 import { QuoteList } from './components/QuoteList'
 import { Sidebar } from './components/Sidebar'
 import { loadMeta, loadShards } from './data'
-import { languageName } from './languages'
+import { languageMode, languageName } from './languages'
 import type { Filters, Meta, Quote, SortKey } from './types'
 import { readHash, writeHash, type AppView } from './urlState'
 
@@ -228,6 +229,8 @@ export default function App() {
             )}
           </div>
 
+          <LanguageSwitch meta={meta} filters={filters} facets={facets} onChange={setFilters} />
+
           <ActiveChips meta={meta} filters={filters} onChange={setFilters} />
 
           {grouped && <p className="group-hint">Grouped by {sort === 'philosopher' ? 'thinker' : sort}.</p>}
@@ -263,7 +266,8 @@ function ActiveChips({ meta, filters, onChange }: { meta: Meta; filters: Filters
   const chips: { key: string; label: string; remove: () => void }[] = []
   for (const c of filters.cats) chips.push({ key: `c${c}`, label: meta.categories[c].name, remove: () => onChange({ ...filters, cats: new Set([...filters.cats].filter((x) => x !== c)) }) })
   for (const r of filters.roles) chips.push({ key: `r${r}`, label: meta.roles[r].name, remove: () => onChange({ ...filters, roles: new Set([...filters.roles].filter((x) => x !== r)) }) })
-  for (const l of filters.languages) chips.push({ key: `l${l}`, label: languageName(l), remove: () => onChange({ ...filters, languages: new Set([...filters.languages].filter((x) => x !== l)) }) })
+  // the All / English / Original switch already shows a preset; only list languages for a custom mix
+  if (languageMode(meta, filters) === null) for (const l of filters.languages) chips.push({ key: `l${l}`, label: languageName(l), remove: () => onChange({ ...filters, languages: new Set([...filters.languages].filter((x) => x !== l)) }) })
   for (const s of filters.schools) chips.push({ key: `s${s}`, label: meta.schools[s].name, remove: () => onChange({ ...filters, schools: new Set([...filters.schools].filter((x) => x !== s)) }) })
   for (const c of filters.countries) chips.push({ key: `k${c}`, label: c, remove: () => onChange({ ...filters, countries: new Set([...filters.countries].filter((x) => x !== c)) }) })
   for (const e of filters.eras) chips.push({ key: `e${e}`, label: e, remove: () => onChange({ ...filters, eras: new Set([...filters.eras].filter((x) => x !== e)) }) })
