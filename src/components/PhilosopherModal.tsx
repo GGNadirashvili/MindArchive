@@ -26,7 +26,7 @@ export function PhilosopherModal({ roles: roleNames, schools: schoolNames, philo
   if (p.wiki) links.push({ label: 'Wikipedia', href: `https://en.wikipedia.org/wiki/${encodeURIComponent(p.wiki.replace(/ /g, '_'))}` })
   if (p.sep) links.push({ label: 'Stanford Encyclopedia', href: `https://plato.stanford.edu/entries/${p.sep}/` })
   if (p.iep) links.push({ label: 'Internet Encyclopedia', href: `https://iep.utm.edu/${p.iep}/` })
-  links.push({ label: 'Wikiquote', href: `https://en.wikiquote.org/wiki/${encodeURIComponent(p.wq.replace(/ /g, '_'))}` })
+  links.push({ label: 'Wikiquote', href: `https://${p.wql ?? 'en'}.wikiquote.org/wiki/${encodeURIComponent(p.wq.replace(/ /g, '_'))}` })
 
   return (
     <div className="modal-backdrop" onClick={onClose}>

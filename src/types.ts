@@ -20,6 +20,8 @@ export interface Philosopher {
   img: string | null
   wiki: string | null
   wq: string
+  /** Wikiquote language edition when the page is not on English Wikiquote */
+  wql?: string
   sep: string | null
   iep: string | null
   n: number
@@ -47,6 +49,10 @@ export interface Quote {
   attributed: boolean
   /** One of the thinker's best-known lines (a Wikiquote featured quote) */
   featured: boolean
+  /** English text is a translation (the original is in `orig`) */
+  translated: boolean
+  /** original-language text, when the quote was translated */
+  orig?: string
   /** lowercased text + author + source, for search */
   hay: string
 }

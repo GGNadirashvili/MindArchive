@@ -123,6 +123,7 @@ a:hover { text-decoration: underline; }
 .card { position: relative; padding: 24px 4px 20px; border-bottom: 1px solid var(--line); }
 .card::before { content: '“'; position: absolute; left: -2px; top: 6px; font-family: var(--serif); font-size: 54px; line-height: 1; color: var(--green); opacity: 0.55; pointer-events: none; }
 .card-text { margin: 0; padding-left: 34px; font-family: var(--serif); font-size: 20px; line-height: 1.55; font-weight: 400; color: var(--text); text-wrap: pretty; }
+.card-orig { margin: 8px 0 0; padding-left: 34px; font-family: var(--serif); font-style: italic; font-size: 15.5px; line-height: 1.5; color: var(--muted); text-wrap: pretty; }
 .card-foot { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin: 16px 0 0 34px; }
 .card-author { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .author-name { align-self: flex-start; font-weight: 600; font-size: 14.5px; }
@@ -176,6 +177,7 @@ button.tag:hover { border-color: var(--green); color: var(--green); }
   .brand { margin-bottom: 36px; }
   .card-text { font-size: 18px; padding-left: 28px; }
   .card-foot, .card-tags { margin-left: 28px; }
+  .card-orig { padding-left: 28px; font-size: 14.5px; }
   .result-count { flex-basis: 100%; order: -1; }
   .sort span { display: none; }
   .modal { padding: 22px; }
