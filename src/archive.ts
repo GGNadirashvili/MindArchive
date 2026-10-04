@@ -20,11 +20,12 @@ export const emptyFilters = (): Filters => ({
   countries: new Set(),
   eras: new Set(),
   roles: new Set(),
+  schools: new Set(),
   philosophers: new Set(),
   saved: false,
 })
 
-type Facet = 'cats' | 'countries' | 'eras' | 'roles' | 'philosophers' | 'saved' | 'query'
+type Facet = 'cats' | 'countries' | 'eras' | 'roles' | 'schools' | 'philosophers' | 'saved' | 'query'
 
 /** Does a quote pass every active filter, optionally ignoring one facet (for faceted counts)? */
 export function matches(q: Quote, f: Filters, meta: Meta, saved: Set<number>, skip?: Facet): boolean {
@@ -36,6 +37,7 @@ export function matches(q: Quote, f: Filters, meta: Meta, saved: Set<number>, sk
   if (skip !== 'countries' && f.countries.size && !f.countries.has(ph.country)) return false
   if (skip !== 'eras' && f.eras.size && !f.eras.has(ph.era)) return false
   if (skip !== 'roles' && f.roles.size && !ph.roles.some((r) => f.roles.has(r))) return false
+  if (skip !== 'schools' && f.schools.size && !ph.schools.some((s) => f.schools.has(s))) return false
   if (skip !== 'philosophers' && f.philosophers.size && !f.philosophers.has(q.p)) return false
   if (skip !== 'saved' && f.saved && !saved.has(q.id)) return false
   return true
@@ -46,6 +48,7 @@ export interface Facets {
   countries: Map<string, number>
   eras: Map<string, number>
   roles: number[]
+  schools: number[]
   philosophers: Map<number, number>
 }
 
@@ -55,6 +58,7 @@ export function computeFacets(quotes: Quote[], f: Filters, meta: Meta, saved: Se
   const countries = new Map<string, number>()
   const eras = new Map<string, number>()
   const roles = new Array(meta.roles.length).fill(0)
+  const schools = new Array(meta.schools.length).fill(0)
   const philosophers = new Map<number, number>()
   const bump = <K>(m: Map<K, number>, k: K) => m.set(k, (m.get(k) ?? 0) + 1)
 
@@ -64,9 +68,10 @@ export function computeFacets(quotes: Quote[], f: Filters, meta: Meta, saved: Se
     if (matches(q, f, meta, saved, 'countries')) bump(countries, ph.country)
     if (matches(q, f, meta, saved, 'eras')) bump(eras, ph.era)
     if (matches(q, f, meta, saved, 'roles')) for (const r of ph.roles) roles[r]++
+    if (matches(q, f, meta, saved, 'schools')) for (const s of ph.schools) schools[s]++
     if (matches(q, f, meta, saved, 'philosophers')) bump(philosophers, q.p)
   }
-  return { cats, countries, eras, roles, philosophers }
+  return { cats, countries, eras, roles, schools, philosophers }
 }
 
 export interface Row {

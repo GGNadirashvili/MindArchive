@@ -98,6 +98,21 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
     [meta, facets.roles, filters, onChange],
   )
 
+  const schoolItems = useMemo<Item[]>(
+    () =>
+      meta.schools
+        .map((s, i) => ({
+          key: s.id,
+          label: s.name,
+          count: facets.schools[i],
+          checked: filters.schools.has(i),
+          onToggle: () => onChange({ ...filters, schools: toggle(filters.schools, i) }),
+        }))
+        .filter((s) => s.count > 0 || s.checked)
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
+    [meta, facets.schools, filters, onChange],
+  )
+
   const countryItems = useMemo<Item[]>(
     () =>
       [...new Set(meta.philosophers.map((p) => p.country))]
@@ -159,6 +174,10 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
 
       <Accordion title="Role" selected={filters.roles.size}>
         <CheckList items={roleItems} />
+      </Accordion>
+
+      <Accordion title="School of thought" selected={filters.schools.size}>
+        <CheckList items={schoolItems} searchable placeholder="Stoicism, Existentialism…" />
       </Accordion>
 
       <Accordion title="Category" selected={filters.cats.size}>

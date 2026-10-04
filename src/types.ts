@@ -15,7 +15,8 @@ export interface Philosopher {
   roles: number[]
   country: string
   continent: string
-  schools: string[]
+  /** indexes into Meta.schools */
+  schools: number[]
   img: string | null
   wiki: string | null
   wq: string
@@ -31,6 +32,7 @@ export interface Meta {
   quoteCount: number
   categories: Category[]
   roles: Category[]
+  schools: Category[]
   philosophers: Philosopher[]
 }
 
@@ -53,6 +55,7 @@ export interface Filters {
   countries: Set<string>
   eras: Set<string>
   roles: Set<number>
+  schools: Set<number>
   philosophers: Set<number>
   saved: boolean
 }

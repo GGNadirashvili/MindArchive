@@ -4,13 +4,14 @@ import type { Philosopher } from '../types'
 
 interface Props {
   roles: string[]
+  schools: string[]
   philosopher: Philosopher
   onClose: () => void
   onShowQuotes: (index: number) => void
   onCountry: (country: string) => void
 }
 
-export function PhilosopherModal({ roles: roleNames, philosopher: p, onClose, onShowQuotes, onCountry }: Props) {
+export function PhilosopherModal({ roles: roleNames, schools: schoolNames, philosopher: p, onClose, onShowQuotes, onCountry }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -47,14 +48,14 @@ export function PhilosopherModal({ roles: roleNames, philosopher: p, onClose, on
           </div>
         </div>
         {p.desc && <p className="modal-desc">{p.desc}</p>}
-        {(roleNames.length > 0 || p.schools.length > 0) && (
+        {(roleNames.length > 0 || schoolNames.length > 0) && (
           <p className="modal-schools">
             {roleNames.map((r) => (
               <span key={r} className="tag tag-pd">
                 {r}
               </span>
             ))}
-            {p.schools.map((s) => (
+            {schoolNames.slice(0, 5).map((s) => (
               <span key={s} className="tag">
                 {s}
               </span>
