@@ -5,6 +5,7 @@ import { sparql, val } from './lib.mjs'
 /**
  * @param {string[]} ids Wikidata ids (Q...)
  * @param {string} host Wikiquote edition the thinker must have a page on, e.g. "en.wikiquote.org"
+ *   (null = do not require a Wikidata sitelink; the caller supplies page titles)
  */
 export const detailQuery = (ids, host) => `
 SELECT ?p ?pLabel ?pDescription
@@ -16,7 +17,7 @@ SELECT ?p ?pLabel ?pDescription
   (GROUP_CONCAT(DISTINCT ?fieldLabel; separator="|") AS ?fields)
 WHERE {
   VALUES ?p { ${ids.map((i) => 'wd:' + i).join(' ')} }
-  ?sq schema:about ?p ; schema:isPartOf <https://${host}/> ; schema:name ?quoteTitle .
+  ${host ? `?sq schema:about ?p ; schema:isPartOf <https://${host}/> ; schema:name ?quoteTitle .` : ''}
   OPTIONAL { ?wpArt schema:about ?p ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?wikiTitle . }
   OPTIONAL { ?p wikibase:sitelinks ?links }
   OPTIONAL { ?p wdt:P569 ?birth }
@@ -44,7 +45,7 @@ const year = (iso) => {
 const list = (s) => (s ? s.split('|').filter(Boolean) : [])
 
 /** Fetches thinker records for the given ids; `lang` is stored when the Wikiquote page is not English. */
-export async function fetchThinkers(ids, host, lang) {
+export async function fetchThinkers(ids, host, lang, titles = new Map()) {
   const rows = await sparql(detailQuery(ids, host))
   return rows.map((r) => ({
     id: val(r, 'p').split('/').pop(),
@@ -53,7 +54,7 @@ export async function fetchThinkers(ids, host, lang) {
     born: year(val(r, 'birthD')),
     died: year(val(r, 'deathD')),
     sitelinks: Number(val(r, 'sitelinks') ?? 0),
-    wikiquote: val(r, 'wq'),
+    wikiquote: val(r, 'wq') ?? titles.get(val(r, 'p').split('/').pop()),
     ...(lang ? { wikiquoteLang: lang } : {}),
     wikipedia: val(r, 'wp') ?? null,
     image: val(r, 'image') ?? null,

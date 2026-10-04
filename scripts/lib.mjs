@@ -56,3 +56,30 @@ export const chunk = (arr, size) => {
 }
 
 export const val = (row, key) => row[key]?.value
+
+/** Raw wikitext for many pages of one MediaWiki site (follows redirects). Returns title -> wikitext|null. */
+export async function fetchWikitext(host, titles, { batch = 15 } = {}) {
+  const pages = {}
+  for (const group of chunk(titles, batch)) {
+    const params = new URLSearchParams({
+      action: 'query',
+      prop: 'revisions',
+      rvprop: 'content',
+      rvslots: 'main',
+      redirects: '1',
+      format: 'json',
+      formatversion: '2',
+      titles: group.join('|'),
+    })
+    const json = await fetchJson(`https://${host}/w/api.php?${params}`)
+    const redirects = new Map((json.query.redirects ?? []).map((r) => [r.from, r.to]))
+    const normalized = new Map((json.query.normalized ?? []).map((r) => [r.from, r.to]))
+    const byTitle = new Map(json.query.pages.map((p) => [p.title, p.revisions?.[0]?.slots?.main?.content ?? null]))
+    for (const t of group) {
+      const n = normalized.get(t) ?? t
+      pages[t] = byTitle.get(redirects.get(n) ?? n) ?? null
+    }
+    await sleep(300)
+  }
+  return pages
+}
