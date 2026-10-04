@@ -123,6 +123,7 @@ for (const [i, s] of shards.entries()) await writeJson(`${OUT}/quotes-${i}.json`
 await writeJson(`${OUT}/meta.json`, {
   generated: new Date().toISOString().slice(0, 10),
   shards: shards.length,
+  shardSize: SHARD_SIZE,
   quoteCount: rows.length,
   categories: [...CATEGORIES.map((c) => ({ id: c.id, name: c.name })), { id: 'reflections', name: 'Reflections' }],
   philosophers: outPhilosophers,

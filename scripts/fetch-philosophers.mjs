@@ -1,6 +1,6 @@
 // Collects philosophers from Wikidata (those with an English Wikiquote page),
 // with birth/death, modern country (of birthplace), schools, and encyclopedia ids.
-import { chunk, readJson, sparql, val, writeJson, sleep } from './lib.mjs'
+import { chunk, sparql, val, writeJson, sleep } from './lib.mjs'
 
 const OUT = 'data/raw/philosophers.json'
 

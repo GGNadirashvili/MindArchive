@@ -61,11 +61,13 @@ function parsePage(wikitext) {
     if (source && /^(quoted|as quoted|cited|see|\(?translat)/i.test(source)) source = source.replace(/^(as )?(quoted|cited) (in|by|from)\s*/i, '')
     if (!source && work) source = work
 
-    text = text.replace(/\s+pp?\.\s*\d+[\d\-–]*\.?$/i, '').replace(/^["“”]+|["“”]+$/g, '').trim()
+    text = text.replace(/^:+\s*/, '').replace(/\s+pp?\.\s*\d+[\d\-–]*\.?$/i, '').replace(/^["“”]+|["“”]+$/g, '').trim()
     if (text.length < 25 || text.length > 700) return
     if (text.split(' ').length < 5) return
     if (/[{}|]|\bhttps?:/.test(text)) return
     if (/^(see|cf\.)\b/i.test(text)) return
+    // Editorial notes and bibliography lines that are not quotations.
+    if (/quote investigator|\bwikiquote\b|\bsee:|\(with variants\)|,\s*(?:ed|eds|trans)\.|University Press|\(\d{4}\)\s*$/i.test(text) || /\bUP\b/.test(text)) return
     // Mostly non-latin text (untranslated) is not useful for an English archive.
     const letters = text.match(/\p{L}/gu) ?? []
     const latin = text.match(/\p{Script=Latin}/gu) ?? []
