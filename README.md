@@ -14,7 +14,7 @@ as static JSON in `public/data/`. There is no backend.
 | Step | Script | What it does |
 | --- | --- | --- |
 | 1 | `fetch-philosophers.mjs` | Queries Wikidata for philosophers who have a Wikiquote page: dates, country of birth (mapped to a modern country), schools, SEP/IEP ids, renown (sitelink count). |
-| 2 | `fetch-wikiquote.mjs`, `parse-wikiquote.mjs` | Downloads each Wikiquote page and extracts sourced quotes, dropping disputed/misattributed sections, non-English text and editorial notes. |
+| 2 | `fetch-works.mjs`, `fetch-wikiquote.mjs`, `parse-wikiquote.mjs` | Downloads each thinker's Wikiquote page and the pages of their works (where famous lines like "The unexamined life is not worth living" live), extracts quotes, keeps Wikiquote's featured quotes first, flags attributed ones, and drops misattributed sections, non-English text and editorial notes. |
 | 3 | `fetch-gutenberg.mjs` | Pulls short, self-contained passages from public-domain philosophy texts on Project Gutenberg. |
 | 4 | `build-dataset.mjs` | Merges sources, de-duplicates, assigns topic categories with a keyword classifier (`categories.mjs`), and writes sharded JSON. |
 

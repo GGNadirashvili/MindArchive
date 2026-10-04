@@ -1,8 +1,10 @@
-// Downloads the raw wikitext of each philosopher's English Wikiquote page.
+// Downloads the raw wikitext of each thinker's English Wikiquote page, plus the pages of their works.
+import { existsSync } from 'node:fs'
 import { chunk, fetchJson, readJson, sleep, writeJson } from './lib.mjs'
 
 const philosophers = await readJson('data/raw/philosophers.json')
-const titles = philosophers.map((p) => p.wikiquote)
+const works = existsSync('data/raw/works.json') ? await readJson('data/raw/works.json') : []
+const titles = [...new Set([...philosophers.map((p) => p.wikiquote), ...works.map((w) => w.title)])]
 const pages = {}
 
 for (const [i, group] of chunk(titles, 15).entries()) {

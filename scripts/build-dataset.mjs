@@ -109,12 +109,23 @@ const outPhilosophers = kept.map((p, i) => {
   }
 })
 
+// Bit flags stored per quote (see src/data.ts).
+const FLAG_PUBLIC_DOMAIN = 1
+const FLAG_ATTRIBUTED = 2
+const FLAG_FEATURED = 4
+
+// Within each thinker: featured (best-known) lines first, then sourced quotes, then public-domain
+// passages, then attributed ones.
+const rank = (q) => (q.featured ? 0 : q.via === 'gutenberg' ? 2 : q.attributed ? 3 : 1)
+
 const indexById = new Map(kept.map((p, i) => [p.id, i]))
 const rows = []
 for (const p of kept) {
-  for (const q of byPhilosopher.get(p.id)) {
+  const quotes = byPhilosopher.get(p.id).map((q, i) => ({ q, i })).sort((a, b) => rank(a.q) - rank(b.q) || a.i - b.i)
+  for (const { q } of quotes) {
     const cats = classify(q.text)
-    rows.push([indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], q.via === 'gutenberg' ? 1 : 0])
+    const flags = (q.via === 'gutenberg' ? FLAG_PUBLIC_DOMAIN : 0) | (q.attributed ? FLAG_ATTRIBUTED : 0) | (q.featured ? FLAG_FEATURED : 0)
+    rows.push([indexById.get(p.id), q.text, q.source ?? '', cats.length ? cats : [FALLBACK], flags])
   }
 }
 
