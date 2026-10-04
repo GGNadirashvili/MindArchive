@@ -57,6 +57,8 @@ export const QuoteCard = memo(function QuoteCard({ quote, meta, saved, onToggleS
             {meta.categories[c].name}
           </button>
         ))}
+        {quote.featured && <span className="tag tag-pd" title="One of this thinker's best-known lines">Famous</span>}
+        {quote.attributed && <span className="tag" title="Wikiquote lists this as attributed or disputed: the source is unconfirmed">Attributed</span>}
         {quote.publicDomain && <span className="tag tag-pd" title="Passage from a public-domain text on Project Gutenberg">Public domain</span>}
       </div>
     </article>

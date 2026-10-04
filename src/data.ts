@@ -8,6 +8,7 @@ export async function loadMeta(): Promise<Meta> {
   return res.json()
 }
 
+// flags: 1 = public domain passage, 2 = attributed/disputed, 4 = featured
 type Row = [number, string, string, number[], number]
 
 /** Loads quote shards in parallel and reports each as soon as it is ready. */
@@ -17,13 +18,15 @@ export async function loadShards(meta: Meta, onShard: (quotes: Quote[]) => void)
       const res = await fetch(`${base}data/quotes-${shard}.json`)
       if (!res.ok) throw new Error(`Could not load quotes (${res.status})`)
       const rows: Row[] = await res.json()
-      const quotes = rows.map(([p, text, source, cats, pd], i): Quote => ({
+      const quotes = rows.map(([p, text, source, cats, flags], i): Quote => ({
         id: shard * meta.shardSize + i,
         p,
         text,
         source,
         cats,
-        publicDomain: pd === 1,
+        publicDomain: (flags & 1) !== 0,
+        attributed: (flags & 2) !== 0,
+        featured: (flags & 4) !== 0,
         hay: `${text} ${meta.philosophers[p].name} ${source}`.toLowerCase(),
       }))
       onShard(quotes)

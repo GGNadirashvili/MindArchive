@@ -43,6 +43,10 @@ export interface Quote {
   source: string
   cats: number[]
   publicDomain: boolean
+  /** Wikiquote lists it as attributed/disputed rather than firmly sourced */
+  attributed: boolean
+  /** One of the thinker's best-known lines (a Wikiquote featured quote) */
+  featured: boolean
   /** lowercased text + author + source, for search */
   hay: string
 }
