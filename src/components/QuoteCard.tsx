@@ -1,5 +1,6 @@
 import { memo, useState } from 'react'
 import { lifespan } from '../archive'
+import { languageName } from '../languages'
 import type { Meta, Quote } from '../types'
 
 interface Props {
@@ -27,10 +28,12 @@ export const QuoteCard = memo(function QuoteCard({ quote, meta, saved, onToggleS
   }
 
   return (
-    <article className="card">
-      <blockquote className="card-text">{quote.text}</blockquote>
+    <article className="card" data-lang={quote.lang}>
+      <blockquote className={`card-text ${quote.lang !== 'en' ? 'card-native' : ''}`} lang={quote.lang}>
+        {quote.text}
+      </blockquote>
       {quote.orig && (
-        <p className="card-orig" lang="ru">
+        <p className="card-orig">
           {quote.orig}
         </p>
       )}
@@ -64,6 +67,7 @@ export const QuoteCard = memo(function QuoteCard({ quote, meta, saved, onToggleS
         ))}
         {quote.featured && <span className="tag tag-pd" title="One of this thinker's best-known lines">Famous</span>}
         {quote.attributed && <span className="tag" title="Wikiquote lists this as attributed or disputed: the source is unconfirmed">Attributed</span>}
+        {quote.lang !== 'en' && <span className="tag tag-pd" title="Shown in the original language">{languageName(quote.lang)}</span>}
         {quote.translated && <span className="tag" title="English translation by MindArchive, not the original wording">Translated</span>}
         {quote.publicDomain && <span className="tag tag-pd" title="Passage from a public-domain text on Project Gutenberg">Public domain</span>}
       </div>

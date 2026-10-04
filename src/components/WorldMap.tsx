@@ -293,9 +293,9 @@ function ThinkerDetail({ philosopher: p, meta, quotes, onBack, onShowThinker }: 
       <ul className="panel-quotes">
         {preview.map((q) => (
           <li key={q.id}>
-            <p className="pq-text">{q.text}</p>
+            <p className="pq-text" lang={q.lang}>{q.text}</p>
             {q.orig && (
-              <p className="pq-orig" lang="ru">
+              <p className="pq-orig">
                 {q.orig}
               </p>
             )}

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { ERA_ORDER, type Facets } from '../archive'
+import { languageLabel } from '../languages'
 import type { Filters, Meta } from '../types'
 
 interface Props {
@@ -113,6 +114,18 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
     [meta, facets.schools, filters, onChange],
   )
 
+  const languageItems = useMemo<Item[]>(
+    () =>
+      meta.languages.map((code) => ({
+        key: code,
+        label: languageLabel(code),
+        count: facets.languages.get(code) ?? 0,
+        checked: filters.languages.has(code),
+        onToggle: () => onChange({ ...filters, languages: toggle(filters.languages, code) }),
+      })),
+    [meta, facets.languages, filters, onChange],
+  )
+
   const countryItems = useMemo<Item[]>(
     () =>
       [...new Set(meta.philosophers.map((p) => p.country))]
@@ -182,6 +195,10 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
 
       <Accordion title="Category" selected={filters.cats.size}>
         <CheckList items={categoryItems} />
+      </Accordion>
+
+      <Accordion title="Language" selected={filters.languages.size}>
+        <CheckList items={languageItems} />
       </Accordion>
 
       <Accordion title="Thinker’s country" selected={filters.countries.size}>

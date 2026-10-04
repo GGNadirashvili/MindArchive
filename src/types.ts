@@ -32,6 +32,8 @@ export interface Meta {
   shards: number
   shardSize: number
   quoteCount: number
+  /** language codes present in the archive, English first */
+  languages: string[]
   categories: Category[]
   roles: Category[]
   schools: Category[]
@@ -49,6 +51,8 @@ export interface Quote {
   attributed: boolean
   /** One of the thinker's best-known lines (a Wikiquote featured quote) */
   featured: boolean
+  /** language code of `text` ('en' unless it is an original-language quote) */
+  lang: string
   /** English text is a translation (the original is in `orig`) */
   translated: boolean
   /** original-language text, when the quote was translated */
@@ -66,6 +70,7 @@ export interface Filters {
   eras: Set<string>
   roles: Set<number>
   schools: Set<number>
+  languages: Set<string>
   philosophers: Set<number>
   saved: boolean
 }
