@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { ERA_ORDER, type Facets } from '../archive'
 import type { Filters, Meta } from '../types'
 
@@ -18,27 +18,115 @@ function toggle<T>(set: Set<T>, value: T): Set<T> {
   return next
 }
 
+/** Collapsible section; the header shows how many values are selected. */
+function Accordion({ title, selected, defaultOpen = false, children }: { title: string; selected: number; defaultOpen?: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className={`acc ${open ? 'open' : ''}`}>
+      <button className="acc-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span className="acc-title">{title}</span>
+        {selected > 0 && <span className="acc-badge">{selected}</span>}
+        <svg className="acc-chevron" viewBox="0 0 12 8" width="12" height="8" aria-hidden>
+          <path d="m1 1.5 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div className="acc-panel">
+        <div className="acc-inner">{children}</div>
+      </div>
+    </section>
+  )
+}
+
+interface Item {
+  key: string | number
+  label: string
+  count: number
+  checked: boolean
+  onToggle: () => void
+}
+
+/** Scrollable checkbox list with optional search; selected items stay pinned on top. */
+function CheckList({ items, searchable, placeholder, limit = 120 }: { items: Item[]; searchable?: boolean; placeholder?: string; limit?: number }) {
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const matching = q ? items.filter((i) => i.label.toLowerCase().includes(q)) : items
+  const ordered = [...matching.filter((i) => i.checked), ...matching.filter((i) => !i.checked)]
+  const shown = ordered.slice(0, limit)
+
+  return (
+    <>
+      {searchable && <input className="mini-input" type="search" placeholder={placeholder} value={query} onChange={(e) => setQuery(e.target.value)} />}
+      <ul className="check-list scroll-list">
+        {shown.map((i) => (
+          <li key={i.key}>
+            <label className="check">
+              <input type="checkbox" checked={i.checked} onChange={i.onToggle} />
+              <span className="check-label">{i.label}</span>
+              <span className="check-count">{i.count.toLocaleString()}</span>
+            </label>
+          </li>
+        ))}
+        {shown.length === 0 && <li className="list-empty">No matches</li>}
+        {ordered.length > limit && <li className="list-empty">Showing {limit} of {ordered.length.toLocaleString()}. Type to narrow down.</li>}
+      </ul>
+    </>
+  )
+}
+
 export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, hasFilters }: Props) {
-  const [countryQuery, setCountryQuery] = useState('')
-  const [showAllCountries, setShowAllCountries] = useState(false)
-  const [pickerQuery, setPickerQuery] = useState('')
+  const categoryItems = useMemo<Item[]>(
+    () =>
+      meta.categories.map((c, i) => ({
+        key: c.id,
+        label: c.name,
+        count: facets.cats[i],
+        checked: filters.cats.has(i),
+        onToggle: () => onChange({ ...filters, cats: toggle(filters.cats, i) }),
+      })),
+    [meta, facets.cats, filters, onChange],
+  )
 
-  const countries = useMemo(() => {
-    const all = new Set<string>([...meta.philosophers.map((p) => p.country)])
-    return [...all]
-      .map((name) => ({ name, count: facets.countries.get(name) ?? 0 }))
-      .filter((c) => c.count > 0 || filters.countries.has(c.name))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-  }, [meta, facets.countries, filters.countries])
+  const countryItems = useMemo<Item[]>(
+    () =>
+      [...new Set(meta.philosophers.map((p) => p.country))]
+        .map((name) => ({
+          key: name,
+          label: name,
+          count: facets.countries.get(name) ?? 0,
+          checked: filters.countries.has(name),
+          onToggle: () => onChange({ ...filters, countries: toggle(filters.countries, name) }),
+        }))
+        .filter((c) => c.count > 0 || c.checked)
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
+    [meta, facets.countries, filters, onChange],
+  )
 
-  const visibleCountries = countries.filter((c) => c.name.toLowerCase().includes(countryQuery.toLowerCase()))
-  const shownCountries = showAllCountries || countryQuery ? visibleCountries : visibleCountries.slice(0, 12)
+  const eraItems = useMemo<Item[]>(
+    () =>
+      ERA_ORDER.filter((e) => facets.eras.has(e) || filters.eras.has(e)).map((era) => ({
+        key: era,
+        label: era,
+        count: facets.eras.get(era) ?? 0,
+        checked: filters.eras.has(era),
+        onToggle: () => onChange({ ...filters, eras: toggle(filters.eras, era) }),
+      })),
+    [facets.eras, filters, onChange],
+  )
 
-  const suggestions = useMemo(() => {
-    const q = pickerQuery.trim().toLowerCase()
-    if (!q) return []
-    return meta.philosophers.filter((p) => p.name.toLowerCase().includes(q) && !filters.philosophers.has(p.i)).slice(0, 7)
-  }, [pickerQuery, meta, filters.philosophers])
+  const philosopherItems = useMemo<Item[]>(
+    () =>
+      meta.philosophers
+        .map((p) => ({
+          key: p.i,
+          label: p.name,
+          count: facets.philosophers.get(p.i) ?? 0,
+          checked: filters.philosophers.has(p.i),
+          onToggle: () => onChange({ ...filters, philosophers: toggle(filters.philosophers, p.i) }),
+        }))
+        // meta.philosophers is already ordered by renown
+        .filter((p) => p.count > 0 || p.checked),
+    [meta, facets.philosophers, filters, onChange],
+  )
 
   return (
     <aside className="sidebar" aria-label="Filters">
@@ -51,98 +139,27 @@ export function Sidebar({ meta, filters, facets, savedCount, onChange, onClear, 
         )}
       </div>
 
-      <section className="facet">
-        <h3>Saved</h3>
-        <label className="check">
-          <input type="checkbox" checked={filters.saved} onChange={() => onChange({ ...filters, saved: !filters.saved })} />
-          <span className="check-label">Only my saved quotes</span>
-          <span className="check-count">{savedCount}</span>
-        </label>
-      </section>
+      <label className="check saved-row">
+        <input type="checkbox" checked={filters.saved} onChange={() => onChange({ ...filters, saved: !filters.saved })} />
+        <span className="check-label">Only my saved quotes</span>
+        <span className="check-count">{savedCount}</span>
+      </label>
 
-      <section className="facet">
-        <h3>Category</h3>
-        <ul className="check-list">
-          {meta.categories.map((c, i) => (
-            <li key={c.id}>
-              <label className="check">
-                <input type="checkbox" checked={filters.cats.has(i)} onChange={() => onChange({ ...filters, cats: toggle(filters.cats, i) })} />
-                <span className="check-label">{c.name}</span>
-                <span className="check-count">{facets.cats[i].toLocaleString()}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Accordion title="Category" selected={filters.cats.size}>
+        <CheckList items={categoryItems} />
+      </Accordion>
 
-      <section className="facet">
-        <h3>Philosopher’s country</h3>
-        <input className="mini-input" type="search" placeholder="Find a country…" value={countryQuery} onChange={(e) => setCountryQuery(e.target.value)} />
-        <ul className="check-list">
-          {shownCountries.map((c) => (
-            <li key={c.name}>
-              <label className="check">
-                <input type="checkbox" checked={filters.countries.has(c.name)} onChange={() => onChange({ ...filters, countries: toggle(filters.countries, c.name) })} />
-                <span className="check-label">{c.name}</span>
-                <span className="check-count">{c.count.toLocaleString()}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-        {!countryQuery && visibleCountries.length > 12 && (
-          <button className="link-btn" onClick={() => setShowAllCountries((s) => !s)}>
-            {showAllCountries ? 'Show fewer' : `Show all ${visibleCountries.length} countries`}
-          </button>
-        )}
-      </section>
+      <Accordion title="Philosopher’s country" selected={filters.countries.size}>
+        <CheckList items={countryItems} searchable placeholder="Find a country…" />
+      </Accordion>
 
-      <section className="facet">
-        <h3>Era</h3>
-        <ul className="check-list">
-          {ERA_ORDER.filter((e) => facets.eras.has(e) || filters.eras.has(e)).map((era) => (
-            <li key={era}>
-              <label className="check">
-                <input type="checkbox" checked={filters.eras.has(era)} onChange={() => onChange({ ...filters, eras: toggle(filters.eras, era) })} />
-                <span className="check-label">{era}</span>
-                <span className="check-count">{(facets.eras.get(era) ?? 0).toLocaleString()}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Accordion title="Philosopher" selected={filters.philosophers.size}>
+        <CheckList items={philosopherItems} searchable placeholder={`Search ${meta.philosophers.length.toLocaleString()} thinkers…`} />
+      </Accordion>
 
-      <section className="facet">
-        <h3>Philosopher</h3>
-        <div className="picker">
-          <input className="mini-input" type="search" placeholder="Search 1,900 thinkers…" value={pickerQuery} onChange={(e) => setPickerQuery(e.target.value)} />
-          {suggestions.length > 0 && (
-            <ul className="suggest">
-              {suggestions.map((p) => (
-                <li key={p.i}>
-                  <button
-                    onClick={() => {
-                      onChange({ ...filters, philosophers: toggle(filters.philosophers, p.i) })
-                      setPickerQuery('')
-                    }}
-                  >
-                    <span>{p.name}</span>
-                    <span className="check-count">{p.country}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        {filters.philosophers.size > 0 && (
-          <div className="chips">
-            {[...filters.philosophers].map((i) => (
-              <button key={i} className="chip" onClick={() => onChange({ ...filters, philosophers: toggle(filters.philosophers, i) })}>
-                {meta.philosophers[i].name} <span aria-hidden>×</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+      <Accordion title="Era" selected={filters.eras.size}>
+        <CheckList items={eraItems} />
+      </Accordion>
     </aside>
   )
 }
