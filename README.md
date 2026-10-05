@@ -36,3 +36,5 @@ npm run build       # production build into dist/
   Encyclopedia of Philosophy rather than copying their text.
 
 Topic categories are assigned automatically from keywords and are approximate.
+
+Word meanings (double-click or double-tap an English word) come from the [Wiktionary](https://en.wiktionary.org) definitions API, CC BY-SA.

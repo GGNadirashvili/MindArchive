@@ -30,7 +30,7 @@ export const QuoteCard = memo(function QuoteCard({ quote, meta, saved, onToggleS
   // translate="no" on original-language quotes: Chrome would otherwise machine-translate them to English
   return (
     <article className="card" data-lang={quote.lang} translate={quote.lang !== 'en' ? 'no' : undefined}>
-      <blockquote className={`card-text ${quote.lang !== 'en' ? 'card-native' : ''}`} lang={quote.lang}>
+      <blockquote className={`card-text ${quote.lang !== 'en' ? 'card-native' : ''}`} lang={quote.lang} data-define={quote.lang === 'en' ? '' : undefined}>
         {quote.text}
       </blockquote>
       {quote.orig && (

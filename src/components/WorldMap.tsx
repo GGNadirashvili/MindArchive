@@ -293,7 +293,7 @@ function ThinkerDetail({ philosopher: p, meta, quotes, onBack, onShowThinker }: 
       <ul className="panel-quotes">
         {preview.map((q) => (
           <li key={q.id}>
-            <p className="pq-text" lang={q.lang} translate={q.lang !== 'en' ? 'no' : undefined}>{q.text}</p>
+            <p className="pq-text" lang={q.lang} translate={q.lang !== 'en' ? 'no' : undefined} data-define={q.lang === 'en' ? '' : undefined}>{q.text}</p>
             {q.orig && (
               <p className="pq-orig">
                 {q.orig}

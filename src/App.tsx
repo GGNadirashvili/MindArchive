@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { SORT_OPTIONS, computeFacets, emptyFilters, matches, sortQuotes } from './archive'
 import { LanguageSwitch } from './components/LanguageSwitch'
+import { WordPopup } from './components/WordPopup'
 import { PhilosopherModal } from './components/PhilosopherModal'
 import { QuoteList } from './components/QuoteList'
 import { Sidebar } from './components/Sidebar'
@@ -230,6 +231,7 @@ export default function App() {
           </div>
 
           <LanguageSwitch meta={meta} filters={filters} facets={facets} onChange={setFilters} />
+          <DefineTip />
 
           <ActiveChips meta={meta} filters={filters} onChange={setFilters} />
 
@@ -255,10 +257,40 @@ export default function App() {
         </p>
       </footer>
 
+      <WordPopup />
+
       {openPhilosopher !== null && (
         <PhilosopherModal roles={meta.philosophers[openPhilosopher].roles.map((r) => meta.roles[r].name)} schools={meta.philosophers[openPhilosopher].schools.map((s) => meta.schools[s].name)} philosopher={meta.philosophers[openPhilosopher]} onClose={() => setOpenPhilosopher(null)} onShowQuotes={showPhilosopherQuotes} onCountry={onCountry} />
       )}
     </>
+  )
+}
+
+const TIP_KEY = 'mindarchive:tip-define'
+
+/** One-line hint about the word-meaning feature; dismissible and remembered. */
+function DefineTip() {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(TIP_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (hidden) return null
+  const dismiss = () => {
+    setHidden(true)
+    try {
+      localStorage.setItem(TIP_KEY, '1')
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  return (
+    <p className="tip">
+      <span>Don’t know a word? Double-click or double-tap any English word to see what it means.</span>
+      <button onClick={dismiss} aria-label="Dismiss tip">×</button>
+    </p>
   )
 }
 
