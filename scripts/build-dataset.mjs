@@ -106,14 +106,16 @@ const kept = philosophers
 
 const usedSlugs = new Set()
 const outPhilosophers = kept.map((p, i) => {
-  let slug = slugify(p.name) || p.id.toLowerCase()
+  // a few Wikidata items have no English label; fall back to the Wikiquote page title
+  const name = /^Q\d+$/.test(p.name) ? p.wikiquote : p.name
+  let slug = slugify(name) || p.id.toLowerCase()
   if (usedSlugs.has(slug)) slug += '-' + p.id.toLowerCase()
   usedSlugs.add(slug)
   const country = normCountry(p.country) ?? normCountry(p.citizenship) ?? 'Unknown'
   return {
     i,
     slug,
-    name: /^Q\d+$/.test(p.name) ? p.wikiquote : p.name,
+    name,
     desc: p.description,
     born: p.born,
     died: p.died,
