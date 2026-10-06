@@ -12,6 +12,7 @@ import { readHash, writeHash, type AppView } from './urlState'
 
 // The map (and its ~250 KB of geography data) is only downloaded when someone opens it.
 const WorldMap = lazy(() => import('./components/WorldMap'))
+const Thoughts = lazy(() => import('./components/Thoughts'))
 
 const SAVED_KEY = 'mindarchive:saved'
 
@@ -34,6 +35,7 @@ export default function App() {
   const [openPhilosopher, setOpenPhilosopher] = useState<number | null>(null)
   const [drawer, setDrawer] = useState(false)
   const [appView, setAppView] = useState<AppView>('archive')
+  const [thought, setThought] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -46,6 +48,7 @@ export default function App() {
         setFilters(fromUrl.filters)
         setSort(fromUrl.sort)
         setAppView(fromUrl.view)
+        setThought(fromUrl.thought)
         await loadShards(m, (shard) => !cancelled && setQuotes((prev) => [...prev, ...shard]))
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load the archive')
@@ -57,8 +60,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (meta) writeHash(meta, filters, sort, appView)
-  }, [meta, filters, sort, appView])
+    if (meta) writeHash(meta, filters, sort, appView, thought)
+  }, [meta, filters, sort, appView, thought])
 
   useEffect(() => {
     try {
@@ -100,6 +103,16 @@ export default function App() {
   }, [])
 
   const showThinkerFromMap = useCallback((i: number) => {
+    showPhilosopherQuotes(i)
+    setAppView('archive')
+  }, [showPhilosopherQuotes])
+
+  const openThought = useCallback((slug: string | null) => {
+    setThought(slug)
+    window.scrollTo({ top: 0 })
+  }, [])
+
+  const showThinkerFromThoughts = useCallback((i: number) => {
     showPhilosopherQuotes(i)
     setAppView('archive')
   }, [showPhilosopherQuotes])
@@ -147,9 +160,19 @@ export default function App() {
               <button className={appView === 'map' ? 'on' : ''} onClick={() => setAppView('map')} aria-pressed={appView === 'map'}>
                 World map
               </button>
+              <button className={appView === 'thoughts' ? 'on' : ''} onClick={() => { setAppView('thoughts'); if (appView === 'thoughts') setThought(null) }} aria-pressed={appView === 'thoughts'}>
+                Thoughts
+              </button>
             </nav>
           </div>
-          {appView === 'map' ? (
+          {appView === 'thoughts' ? (
+            <>
+              <h1 className="hero-title hero-title-map">
+                Lives and <em>ideas.</em>
+              </h1>
+              <p className="hero-sub">Who they were, what they believed, and how they lived: short profiles of the great thinkers of the ancient world. Double-click or double-tap any word to see what it means.</p>
+            </>
+          ) : appView === 'map' ? (
             <>
               <h1 className="hero-title hero-title-map">
                 Where thinkers <em>come from.</em>
@@ -183,7 +206,13 @@ export default function App() {
         </div>
       </header>
 
-      {appView === 'map' ? (
+      {appView === 'thoughts' ? (
+        <main className="wrap thoughts-main">
+          <Suspense fallback={<p className="map-loading">Opening the library…</p>}>
+            <Thoughts meta={meta} quotes={quotes} slug={thought} onOpen={openThought} onShowQuotes={showThinkerFromThoughts} />
+          </Suspense>
+        </main>
+      ) : appView === 'map' ? (
         <main className="wrap map-main">
           <Suspense fallback={<p className="map-loading">Drawing the world…</p>}>
             <WorldMap meta={meta} quotes={quotes} onShowThinker={showThinkerFromMap} onShowCountry={showCountryFromMap} />
