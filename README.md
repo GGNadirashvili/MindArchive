@@ -37,6 +37,6 @@ npm run build       # production build into dist/
 
 Topic categories are assigned automatically from keywords and are approximate.
 
-The **Thoughts** section (`src/content/`) holds hand-written profiles of ancient thinkers: who they were, main ideas, principles and facts. The text is original to this project; add more by appending to `src/content/ancient.ts`.
+The **Thoughts** section (`src/content/`) holds 100 long-form profiles, from Thales to Mamardashvili: life, historical context, main ideas, principles, ways to practise them, facts, myths versus reality, sources and legacy. The text is original to this project. Add more by creating a file in `src/content/` that exports `Profile[]` (see `types.ts`) and listing it in `profiles.ts`; `node scripts/check-profiles.mjs` validates them.
 
 Word meanings (double-click or double-tap an English word) come from the [Wiktionary](https://en.wiktionary.org) definitions API, CC BY-SA.
