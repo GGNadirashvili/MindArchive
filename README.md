@@ -37,4 +37,6 @@ npm run build       # production build into dist/
 
 Topic categories are assigned automatically from keywords and are approximate.
 
+The **Thoughts** section (`src/content/`) holds hand-written profiles of ancient thinkers: who they were, main ideas, principles and facts. The text is original to this project; add more by appending to `src/content/ancient.ts`.
+
 Word meanings (double-click or double-tap an English word) come from the [Wiktionary](https://en.wiktionary.org) definitions API, CC BY-SA.
