@@ -46,7 +46,8 @@ a:hover { text-decoration: underline; }
 /* ---------- hero ---------- */
 .hero { border-bottom: 1px solid var(--line); padding: 28px 0 40px; background: radial-gradient(ellipse 60% 120% at 50% -30%, rgba(43, 213, 118, 0.11), transparent 70%); }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 56px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; border-radius: 8px; padding: 2px 4px 2px 0; }
+.brand:hover .brand-name { color: var(--green); }
 .view-nav { display: flex; padding: 3px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--panel); }
 .view-nav button { padding: 6px 16px; border-radius: 999px; font-size: 13px; color: var(--muted); transition: all 0.15s; }
 .view-nav button:hover { color: var(--text); }
@@ -72,10 +73,11 @@ a:hover { text-decoration: underline; }
 .map-svg { display: block; width: 100%; height: auto; cursor: grab; touch-action: pan-y; user-select: none; }
 .map-svg.dragging { cursor: grabbing; }
 .map-world { transform-origin: 0 0; transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
-.country { fill: #101010; stroke: #232323; stroke-width: 0.5px; transition: fill 0.15s, stroke 0.15s; }
+.country { fill: #101010; stroke: #232323; }
 .country.has-thinkers { stroke: #000; cursor: pointer; }
-.country.has-thinkers:hover { stroke: #fff; stroke-width: 1.2px; filter: brightness(1.25); }
-.country.selected { stroke: #fff; stroke-width: 1.6px; }
+.country.has-thinkers:hover { stroke: #fff; stroke-width: calc(1.4px / var(--k, 1)); }
+.country.selected { stroke: #fff; stroke-width: calc(1.8px / var(--k, 1)); }
+@media (hover: hover) { .country.has-thinkers:hover { filter: brightness(1.25); } }
 .map-tip { position: absolute; z-index: 3; pointer-events: none; transform: translate(14px, 14px); padding: 7px 11px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-2); display: flex; flex-direction: column; font-size: 13px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); }
 .map-tip span { color: var(--green); font-family: var(--mono); font-size: 11.5px; }
 .map-controls { position: absolute; left: 14px; bottom: 14px; display: flex; flex-direction: column; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--panel); }
@@ -114,7 +116,8 @@ a:hover { text-decoration: underline; }
 .map-list button:hover, .map-list button.on { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 880px) {
-  .map-panel { position: static; width: auto; border: 0; border-top: 1px solid var(--line-2); max-height: 70vh; }
+  .map-panel { position: static; width: auto; border: 0; border-top: 1px solid var(--line-2); max-height: 70vh; backdrop-filter: none; animation: none; background: var(--panel); }
+  .map-stage { background: #050806; }
   .map-view.has-panel .map-legend { right: 14px; }
   .map-stage { border-radius: 14px; }
   .topbar { margin-bottom: 36px; }

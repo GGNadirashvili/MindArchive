@@ -107,6 +107,17 @@ export default function App() {
     setAppView('archive')
   }, [showPhilosopherQuotes])
 
+  // The logo returns to a clean home page: archive view, no filters, default sort, top of the page.
+  const goHome = useCallback(() => {
+    setAppView('archive')
+    setThought(null)
+    setFilters(emptyFilters())
+    setSort('renown')
+    setOpenPhilosopher(null)
+    setDrawer(false)
+    window.scrollTo({ top: 0 })
+  }, [])
+
   const openThought = useCallback((slug: string | null) => {
     setThought(slug)
     window.scrollTo({ top: 0 })
@@ -149,10 +160,10 @@ export default function App() {
       <header className="hero">
         <div className="wrap">
           <div className="topbar">
-            <div className="brand">
+            <button className="brand" onClick={goHome} aria-label="MindArchive: back to the home page">
               <span className="brand-mark" aria-hidden />
               <span className="brand-name">MindArchive</span>
-            </div>
+            </button>
             <nav className="view-nav" aria-label="Views">
               <button className={appView === 'archive' ? 'on' : ''} onClick={() => setAppView('archive')} aria-pressed={appView === 'archive'}>
                 Archive
