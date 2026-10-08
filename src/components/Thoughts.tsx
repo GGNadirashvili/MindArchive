@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { PROFILES } from '../content/profiles'
+import { useEffect, useMemo, useState } from 'react'
+import { PROFILE_CARDS, loadProfile, type ProfileCard } from '../content/registry'
 import { ERAS, type Era, type Profile } from '../content/types'
 import type { Meta, Philosopher, Quote } from '../types'
 
@@ -18,36 +18,36 @@ interface Props {
 /** Lives and ideas: a gallery of thinkers, and a reading page for each. All text opts in to word lookups. */
 export default function Thoughts({ meta, quotes, slug, onOpen, onShowQuotes }: Props) {
   const bySlug = useMemo(() => new Map(meta.philosophers.map((p) => [p.slug, p])), [meta])
-  // only profiles whose thinker exists in the archive (so every profile can link to quotes)
-  const profiles = useMemo(() => PROFILES.filter((p) => bySlug.has(p.slug)).sort((a, b) => a.order - b.order), [bySlug])
-  const current = slug ? profiles.find((p) => p.slug === slug) : undefined
+  // only profiles whose thinker exists in the archive (so every profile can link to quotes); already sorted by date
+  const cards = useMemo(() => PROFILE_CARDS.filter((c) => bySlug.has(c.slug)), [bySlug])
+  const index = slug ? cards.findIndex((c) => c.slug === slug) : -1
 
-  if (current) {
-    const index = profiles.indexOf(current)
+  if (index >= 0) {
     return (
-      <ProfilePage
-        profile={current}
-        philosopher={bySlug.get(current.slug)!}
+      <ProfileLoader
+        key={slug}
+        slug={cards[index].slug}
+        philosopher={bySlug.get(cards[index].slug)!}
         quotes={quotes}
-        previous={profiles[index - 1]}
-        next={profiles[index + 1]}
+        previous={cards[index - 1]}
+        next={cards[index + 1]}
         names={bySlug}
         onOpen={onOpen}
         onShowQuotes={onShowQuotes}
       />
     )
   }
-  return <Gallery profiles={profiles} names={bySlug} onOpen={onOpen} />
+  return <Gallery cards={cards} names={bySlug} onOpen={onOpen} />
 }
 
 const nameOf = (names: Map<string, Philosopher>, slug: string) => names.get(slug)?.name ?? slug
 
-function Gallery({ profiles, names, onOpen }: { profiles: Profile[]; names: Map<string, Philosopher>; onOpen: (slug: string) => void }) {
+function Gallery({ cards: profiles, names, onOpen }: { cards: ProfileCard[]; names: Map<string, Philosopher>; onOpen: (slug: string) => void }) {
   const [era, setEra] = useState<Era | 'All'>('All')
   const [query, setQuery] = useState('')
 
   const q = query.trim().toLowerCase()
-  const matchesQuery = (p: Profile) => !q || `${nameOf(names, p.slug)} ${p.tradition} ${p.tagline} ${p.place}`.toLowerCase().includes(q)
+  const matchesQuery = (p: ProfileCard) => !q || `${nameOf(names, p.slug)} ${p.tradition} ${p.tagline} ${p.place}`.toLowerCase().includes(q)
   const shown = profiles.filter((p) => (era === 'All' || p.era === era) && matchesQuery(p))
 
   return (
@@ -93,6 +93,40 @@ function readingMinutes(p: Profile): number {
   return Math.max(1, Math.round(words(parts.join(' ')) / WORDS_PER_MINUTE))
 }
 
+/** Downloads one profile (a small file holding about five profiles), then shows it. */
+function ProfileLoader({ slug, ...rest }: Omit<Parameters<typeof ProfilePage>[0], 'profile'> & { slug: string }) {
+  const [loaded, setLoaded] = useState<Profile | null | undefined>(undefined)
+  useEffect(() => {
+    let cancelled = false
+    loadProfile(slug).then((p) => !cancelled && setLoaded(p ?? null))
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
+  if (loaded === undefined) {
+    return (
+      <div className="thoughts profile">
+        <button className="panel-back" onClick={() => rest.onOpen(null)}>
+          ← All thinkers
+        </button>
+        <p className="map-loading">Opening the story…</p>
+      </div>
+    )
+  }
+  if (loaded === null) {
+    return (
+      <div className="thoughts profile">
+        <button className="panel-back" onClick={() => rest.onOpen(null)}>
+          ← All thinkers
+        </button>
+        <p className="map-loading">This profile could not be loaded. Check your connection and try again.</p>
+      </div>
+    )
+  }
+  return <ProfilePage profile={loaded} {...rest} />
+}
+
 function ProfilePage({
   profile: p,
   philosopher,
@@ -106,8 +140,8 @@ function ProfilePage({
   profile: Profile
   philosopher: Philosopher
   quotes: Quote[]
-  previous?: Profile
-  next?: Profile
+  previous?: ProfileCard
+  next?: ProfileCard
   names: Map<string, Philosopher>
   onOpen: (slug: string | null) => void
   onShowQuotes: (i: number) => void

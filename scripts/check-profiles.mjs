@@ -1,24 +1,13 @@
 // Sanity checks for the Thoughts profiles: every slug exists in the archive, every section is filled,
 // and the text has no straight apostrophes left over or obviously broken characters.
 import { readFile } from 'node:fs/promises'
-import { pathToFileURL } from 'node:url'
 
 const meta = JSON.parse(await readFile('public/data/meta.json', 'utf8'))
 const slugs = new Set(meta.philosophers.map((p) => p.slug))
 
-// Compile the TypeScript content files to plain modules in a temp folder so Node can import them.
-import { mkdtemp, readdir, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import ts from 'typescript'
+import { loadContentGroups } from './content-modules.mjs'
 
-const dir = await mkdtemp(join(tmpdir(), 'mindarchive-profiles-'))
-for (const file of (await readdir('src/content')).filter((f) => f.endsWith('.ts'))) {
-  const source = await readFile(`src/content/${file}`, 'utf8')
-  const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
-  await writeFile(join(dir, file.replace(/\.ts$/, '.mjs')), outputText.replace(/from '(\.\/[^']+)'/g, "from '$1.mjs'"))
-}
-const { PROFILES } = await import(pathToFileURL(join(dir, 'profiles.mjs')).href)
+const PROFILES = (await loadContentGroups()).flatMap((g) => g.profiles)
 
 const wordCount = (p) => JSON.stringify(p).replace(/[{}[\]":,]/g, ' ').split(/\s+/).filter(Boolean).length
 let problems = 0

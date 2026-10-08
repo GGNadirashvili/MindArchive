@@ -37,6 +37,8 @@ npm run build       # production build into dist/
 
 Topic categories are assigned automatically from keywords and are approximate.
 
-The **Thoughts** section (`src/content/`) holds 100 long-form profiles, from Thales to Mamardashvili: life, historical context, main ideas, principles, ways to practise them, facts, myths versus reality, sources and legacy. The text is original to this project. Add more by creating a file in `src/content/` that exports `Profile[]` (see `types.ts`) and listing it in `profiles.ts`; `node scripts/check-profiles.mjs` validates them.
+The **Thoughts** section (`src/content/`) holds 200 long-form profiles, from Thales to Mamardashvili: life, historical context, main ideas, principles, ways to practise them, facts, myths versus reality, sources and legacy. The text is original to this project.
+
+To add profiles: create a file in `src/content/` that exports a `Profile[]` (read `AUTHORING.md` and `types.ts` first), then run `npm run content:check` to validate it. `scripts/build-profile-index.mjs` regenerates `registry.ts` (a light index for the gallery plus lazy loaders) automatically before `npm run dev` and `npm run build`, so the full text of a profile is only downloaded when it is opened.
 
 Word meanings (double-click or double-tap an English word) come from the [Wiktionary](https://en.wiktionary.org) definitions API, CC BY-SA.

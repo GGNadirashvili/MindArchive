@@ -12,7 +12,11 @@
     "data:wikiquote": "node scripts/fetch-wikiquote.mjs && node scripts/parse-wikiquote.mjs",
     "data:gutenberg": "node scripts/fetch-gutenberg.mjs",
     "data:build": "node scripts/build-dataset.mjs",
-    "data": "npm run data:philosophers && npm run data:wikiquote && npm run data:gutenberg && npm run data:build"
+    "data": "npm run data:philosophers && npm run data:wikiquote && npm run data:gutenberg && npm run data:build",
+    "content:index": "node scripts/build-profile-index.mjs",
+    "content:check": "node scripts/check-profiles.mjs",
+    "predev": "npm run content:index",
+    "prebuild": "npm run content:index"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
